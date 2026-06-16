@@ -1,0 +1,13 @@
+{
+  "activeContentPack": "private-pack",
+  "packs": {
+    "private-pack": {
+      "label": "Hero Pack",
+      "universes": ["marvel", "dc", "naruto", "onepiece", "demonslayer"]
+    },
+    "public-pack": {
+      "label": "Original Heroes",
+      "universes": []
+    }
+  }
+}

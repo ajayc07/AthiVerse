@@ -1,0 +1,13 @@
+[
+  { "id": "first_star",        "label": "First Star!",          "description": "Earn your first star",           "icon": "⭐", "condition": "stars",   "threshold": 1,   "unlocked": false, "unlockedAt": null },
+  { "id": "five_stars",        "label": "Star Collector",       "description": "Earn 5 stars",                  "icon": "🌟", "condition": "stars",   "threshold": 5,   "unlocked": false, "unlockedAt": null },
+  { "id": "twenty_stars",      "label": "Star Master",          "description": "Earn 20 stars",                 "icon": "✨", "condition": "stars",   "threshold": 20,  "unlocked": false, "unlockedAt": null },
+  { "id": "fifty_stars",       "label": "Galaxy Brain",         "description": "Earn 50 stars",                 "icon": "🌠", "condition": "stars",   "threshold": 50,  "unlocked": false, "unlockedAt": null },
+  { "id": "hundred_stars",     "label": "Hero Certificate",     "description": "Earn 100 stars",                "icon": "🏆", "condition": "stars",   "threshold": 100, "unlocked": false, "unlockedAt": null },
+  { "id": "streak_3",          "label": "On Fire!",             "description": "3 correct in a row",            "icon": "🔥", "condition": "streak",  "threshold": 3,   "unlocked": false, "unlockedAt": null },
+  { "id": "streak_5",          "label": "Unstoppable!",         "description": "5 correct in a row",            "icon": "⚡", "condition": "streak",  "threshold": 5,   "unlocked": false, "unlockedAt": null },
+  { "id": "streak_10",         "label": "Hero Mode",            "description": "10 correct in a row",           "icon": "💥", "condition": "streak",  "threshold": 10,  "unlocked": false, "unlockedAt": null },
+  { "id": "first_game",        "label": "Game On!",             "description": "Complete your first game",      "icon": "🎮", "condition": "games",   "threshold": 1,   "unlocked": false, "unlockedAt": null },
+  { "id": "ten_games",         "label": "Game Hero",            "description": "Complete 10 games",             "icon": "🎯", "condition": "games",   "threshold": 10,  "unlocked": false, "unlockedAt": null },
+  { "id": "mastery_first",     "label": "Skill Unlocked",       "description": "Master your first skill",       "icon": "🔓", "condition": "mastery", "threshold": 1,   "unlocked": false, "unlockedAt": null }
+]

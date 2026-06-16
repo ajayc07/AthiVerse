@@ -1,0 +1,18 @@
+[
+  { "id": "count_1_10",          "label": "Count 1 to 10",        "pillar": "numbers",   "masteryScore": 0, "attempts": 0, "correctStreak": 0, "incorrectStreak": 0, "lastSeen": null, "unlocked": true,  "prerequisite": null },
+  { "id": "count_1_15",          "label": "Count 1 to 15",        "pillar": "numbers",   "masteryScore": 0, "attempts": 0, "correctStreak": 0, "incorrectStreak": 0, "lastSeen": null, "unlocked": false, "prerequisite": "count_1_10" },
+  { "id": "count_1_20",          "label": "Count 1 to 20",        "pillar": "numbers",   "masteryScore": 0, "attempts": 0, "correctStreak": 0, "incorrectStreak": 0, "lastSeen": null, "unlocked": false, "prerequisite": "count_1_15" },
+  { "id": "capital_letters",     "label": "Capital Letters A–Z",  "pillar": "alphabets", "masteryScore": 0, "attempts": 0, "correctStreak": 0, "incorrectStreak": 0, "lastSeen": null, "unlocked": true,  "prerequisite": null },
+  { "id": "small_letters",       "label": "Small Letters a–z",    "pillar": "alphabets", "masteryScore": 0, "attempts": 0, "correctStreak": 0, "incorrectStreak": 0, "lastSeen": null, "unlocked": false, "prerequisite": "capital_letters" },
+  { "id": "alphabet_sequence",   "label": "Alphabet Sequence",    "pillar": "alphabets", "masteryScore": 0, "attempts": 0, "correctStreak": 0, "incorrectStreak": 0, "lastSeen": null, "unlocked": false, "prerequisite": "small_letters" },
+  { "id": "color_primary",       "label": "Primary Colors",       "pillar": "colors",    "masteryScore": 0, "attempts": 0, "correctStreak": 0, "incorrectStreak": 0, "lastSeen": null, "unlocked": true,  "prerequisite": null },
+  { "id": "color_groups",        "label": "Color Groups",         "pillar": "colors",    "masteryScore": 0, "attempts": 0, "correctStreak": 0, "incorrectStreak": 0, "lastSeen": null, "unlocked": false, "prerequisite": "color_primary" },
+  { "id": "color_shades",        "label": "Color Shades",         "pillar": "colors",    "masteryScore": 0, "attempts": 0, "correctStreak": 0, "incorrectStreak": 0, "lastSeen": null, "unlocked": false, "prerequisite": "color_groups" },
+  { "id": "memory_sequence_2",   "label": "Remember 2 in Order",  "pillar": "memory",    "masteryScore": 0, "attempts": 0, "correctStreak": 0, "incorrectStreak": 0, "lastSeen": null, "unlocked": true,  "prerequisite": null },
+  { "id": "memory_sequence_3",   "label": "Remember 3 in Order",  "pillar": "memory",    "masteryScore": 0, "attempts": 0, "correctStreak": 0, "incorrectStreak": 0, "lastSeen": null, "unlocked": false, "prerequisite": "memory_sequence_2" },
+  { "id": "memory_sequence_4",   "label": "Remember 4 in Order",  "pillar": "memory",    "masteryScore": 0, "attempts": 0, "correctStreak": 0, "incorrectStreak": 0, "lastSeen": null, "unlocked": false, "prerequisite": "memory_sequence_3" },
+  { "id": "logic_patterns_1",    "label": "Simple Patterns",      "pillar": "logic",     "masteryScore": 0, "attempts": 0, "correctStreak": 0, "incorrectStreak": 0, "lastSeen": null, "unlocked": true,  "prerequisite": null },
+  { "id": "logic_patterns_2",    "label": "Complex Patterns",     "pillar": "logic",     "masteryScore": 0, "attempts": 0, "correctStreak": 0, "incorrectStreak": 0, "lastSeen": null, "unlocked": false, "prerequisite": "logic_patterns_1" },
+  { "id": "logic_classification","label": "Classification",        "pillar": "logic",     "masteryScore": 0, "attempts": 0, "correctStreak": 0, "incorrectStreak": 0, "lastSeen": null, "unlocked": false, "prerequisite": "logic_patterns_1" },
+  { "id": "logic_deduction",     "label": "Deduction",            "pillar": "logic",     "masteryScore": 0, "attempts": 0, "correctStreak": 0, "incorrectStreak": 0, "lastSeen": null, "unlocked": false, "prerequisite": "logic_classification" }
+]

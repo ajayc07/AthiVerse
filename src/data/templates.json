@@ -1,0 +1,12 @@
+[
+  { "id": "find_character",       "label": "Find the Character",          "pillar": "logic",     "skillNodes": ["logic_classification"],          "minAge": 3 },
+  { "id": "find_by_color",        "label": "Find by Color",               "pillar": "colors",    "skillNodes": ["color_primary","color_groups"],   "minAge": 3 },
+  { "id": "find_by_power",        "label": "Find by Power",               "pillar": "logic",     "skillNodes": ["logic_classification"],           "minAge": 3 },
+  { "id": "find_by_weapon",       "label": "Find by Weapon",              "pillar": "logic",     "skillNodes": ["logic_classification"],           "minAge": 4 },
+  { "id": "find_by_universe",     "label": "Find by Universe",            "pillar": "logic",     "skillNodes": ["logic_classification"],           "minAge": 3 },
+  { "id": "find_by_first_letter", "label": "Find by First Letter",        "pillar": "alphabets", "skillNodes": ["capital_letters","small_letters"],"minAge": 3 },
+  { "id": "find_by_attribute",    "label": "Find by Attribute",           "pillar": "logic",     "skillNodes": ["logic_deduction"],                "minAge": 4 },
+  { "id": "who_am_i",             "label": "Who Am I?",                   "pillar": "logic",     "skillNodes": ["logic_deduction"],                "minAge": 3 },
+  { "id": "count_objects",        "label": "Count the Objects",           "pillar": "numbers",   "skillNodes": ["count_1_10","count_1_15","count_1_20"], "minAge": 3 },
+  { "id": "sort_objects",         "label": "Sort the Heroes",             "pillar": "logic",     "skillNodes": ["logic_patterns_1","logic_patterns_2"],  "minAge": 4 }
+]
