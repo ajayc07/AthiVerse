@@ -54,12 +54,12 @@ async function play(src: string): Promise<void> {
 
 /** Play instruction audio (e.g. "find") */
 export async function playInstruction(key: string): Promise<void> {
-  await play(`/sounds/instructions/${key}.mp3`)
+  await play(`${import.meta.env.BASE_URL}sounds/instructions/${key}.mp3`)
 }
 
 /** Play character name audio */
 export async function playCharacterName(characterId: string): Promise<void> {
-  await play(`/sounds/names/${characterId}.mp3`)
+  await play(`${import.meta.env.BASE_URL}sounds/names/${characterId}.mp3`)
 }
 
 /** Play composed instruction: "Find" + character name */
@@ -72,10 +72,10 @@ export async function playQuestion(instruction: string, characterId?: string): P
 
 /** Play a UI sound (correct, wrong, celebration, click, open) */
 export async function playUI(type: 'correct' | 'wrong' | 'celebration' | 'click' | 'open'): Promise<void> {
-  await play(`/sounds/ui/${type}.mp3`)
+  await play(`${import.meta.env.BASE_URL}sounds/ui/${type}.mp3`)
 }
 
 /** Fire-and-forget click sound for navigation buttons */
 export function playClick(): void {
-  play('/sounds/ui/click.mp3').catch(() => {})
+  play(`${import.meta.env.BASE_URL}sounds/ui/click.mp3`).catch(() => {})
 }

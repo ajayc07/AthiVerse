@@ -43,7 +43,7 @@ export function CharacterCard({
   const sizeClass = SIZE_MAP[size]
   const primaryColor = colorToHex(character.colors[0] ?? 'purple')
   const secondaryColor = colorToHex(character.colors[1] ?? character.colors[0] ?? 'indigo')
-  const imgSrc = `/characters/${character.image}`
+  const imgSrc = `${import.meta.env.BASE_URL}characters/${character.image}`
 
   let borderClass = 'border-4 border-transparent'
   if (selected) borderClass = 'border-4 border-yellow-400'
