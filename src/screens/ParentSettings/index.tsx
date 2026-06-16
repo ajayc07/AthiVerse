@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { ParentSettings } from '@/types'
 import { motion } from 'framer-motion'
 import { useGameStore } from '@/store/gameStore'
 import { useProfileStore } from '@/store/profileStore'
@@ -18,7 +19,7 @@ export function ParentSettingsScreen() {
   const settings = profile?.parentSettings
   const ageConfig = profile?.ageConfig
 
-  const toggle = async (key: keyof typeof settings, value: boolean) => {
+  const toggle = async (key: keyof ParentSettings, value: boolean) => {
     if (!settings) return
     await updateProfile({
       parentSettings: { ...settings, [key]: value }

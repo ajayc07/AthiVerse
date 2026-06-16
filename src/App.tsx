@@ -1,3 +1,4 @@
+import { type ReactElement } from 'react'
 import { useGameStore } from '@/store/gameStore'
 import { SplashScreen } from '@/screens/Splash'
 import { HomeScreen } from '@/screens/Home'
@@ -12,7 +13,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 export default function App() {
   const screen = useGameStore(s => s.nav.screen)
 
-  const screens: Record<string, JSX.Element> = {
+  const screens: Record<string, ReactElement> = {
     splash:             <SplashScreen />,
     home:               <HomeScreen />,
     universe_selection: <UniverseSelectionScreen />,

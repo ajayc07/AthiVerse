@@ -43,8 +43,8 @@ export function MissingNumber({ onComplete }: Props) {
   const recordResult = useGameStore(s => s.recordResult)
   const { playCorrect, playWrong } = useAudio()
 
-  const maxNum = profile?.skillNodes.count_1_15?.masteryScore >= 80 ? 20
-    : profile?.skillNodes.count_1_10?.masteryScore >= 80 ? 15 : 10
+  const maxNum = (profile?.skillNodes.count_1_15?.masteryScore ?? 0) >= 80 ? 20
+    : (profile?.skillNodes.count_1_10?.masteryScore ?? 0) >= 80 ? 15 : 10
 
   const [round, setRound] = useState(() => buildRound(maxNum))
   const [questionNum, setQuestionNum] = useState(1)

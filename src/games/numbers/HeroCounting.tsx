@@ -60,8 +60,8 @@ export function HeroCounting({ universe, onComplete }: Props) {
   const recordResult = useGameStore(s => s.recordResult)
   const { playCorrect, playWrong } = useAudio()
 
-  const maxCount = profile?.skillNodes.count_1_15?.masteryScore >= 80 ? 20
-    : profile?.skillNodes.count_1_10?.masteryScore >= 80 ? 15 : 10
+  const maxCount = (profile?.skillNodes.count_1_15?.masteryScore ?? 0) >= 80 ? 20
+    : (profile?.skillNodes.count_1_10?.masteryScore ?? 0) >= 80 ? 15 : 10
 
   const [round, setRound] = useState<Round>(() => buildRound(maxCount, universe))
   const [questionNum, setQuestionNum] = useState(1)
