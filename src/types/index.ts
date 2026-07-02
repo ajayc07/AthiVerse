@@ -204,6 +204,7 @@ export type GameId =
   | 'find_odd_one'
   | 'sort_by_attribute'
   | 'who_am_i'
+  | 'trace_numbers'
   | 'tap_and_count'
   | 'number_hunt'
   | 'alphabet_sequence'

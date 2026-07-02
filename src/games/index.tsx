@@ -11,6 +11,7 @@ import { MemoryFlipCards } from './memory/MemoryFlipCards'
 import { WhoAmI } from './logic/WhoAmI'
 import { FindTheOddOne } from './logic/FindTheOddOne'
 import { SortByAttribute } from './logic/SortByAttribute'
+import { TraceNumbers } from './numbers/TraceNumbers'
 
 interface GameRouterProps {
   gameId: GameId
@@ -30,6 +31,7 @@ export function GameRouter({ gameId, universe, onComplete }: GameRouterProps) {
     case 'who_am_i':          return <WhoAmI {...props} />
     case 'find_odd_one':      return <FindTheOddOne onComplete={onComplete} />
     case 'sort_by_attribute': return <SortByAttribute onComplete={onComplete} />
+    case 'trace_numbers':     return <TraceNumbers {...props} />
 
     // Tier 2 — coming soon
     default:
