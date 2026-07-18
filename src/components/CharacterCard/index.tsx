@@ -39,11 +39,13 @@ export function CharacterCard({
   showName = false,
   animate = true
 }: Props) {
-  const [imgFailed, setImgFailed] = useState(false)
+  // Track failure per-src so a reused card instance retries when the character changes
+  const [failedSrc, setFailedSrc] = useState<string | null>(null)
   const sizeClass = SIZE_MAP[size]
   const primaryColor = colorToHex(character.colors[0] ?? 'purple')
   const secondaryColor = colorToHex(character.colors[1] ?? character.colors[0] ?? 'indigo')
   const imgSrc = `${import.meta.env.BASE_URL}characters/${character.image}`
+  const imgFailed = failedSrc === imgSrc
 
   let borderClass = 'border-4 border-transparent'
   if (selected) borderClass = 'border-4 border-yellow-400'
@@ -67,7 +69,7 @@ export function CharacterCard({
           src={imgSrc}
           alt={character.name}
           className="w-full h-full object-contain p-1"
-          onError={() => setImgFailed(true)}
+          onError={() => setFailedSrc(imgSrc)}
           draggable={false}
         />
       )}

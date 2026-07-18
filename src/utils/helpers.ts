@@ -1,4 +1,4 @@
-import type { Character } from '@/types'
+import type { Character, SkillNodeId } from '@/types'
 
 /** Shuffle an array (Fisher-Yates) */
 export function shuffle<T>(arr: T[]): T[] {
@@ -44,6 +44,24 @@ export function weightedPickCharacters(
   }
 
   return shuffle(picked).slice(0, count)
+}
+
+/** Shuffled number options: the correct answer + adjacent distractors so wrong options stay plausible */
+export function buildAdjacentOptions(correct: number, max: number, count = 3): number[] {
+  const wrong = new Set<number>()
+  for (let delta = 1; wrong.size < count - 1 && delta <= max; delta++) {
+    if (correct - delta >= 1) wrong.add(correct - delta)
+    if (wrong.size < count - 1 && correct + delta <= max) wrong.add(correct + delta)
+  }
+  for (let n = 1; wrong.size < count - 1; n++) {
+    if (n !== correct) wrong.add(n)
+  }
+  return shuffle([correct, ...Array.from(wrong).slice(0, count - 1)])
+}
+
+/** Counting skill node for the number actually in play, so higher tiers gain mastery */
+export function countingNodeFor(n: number): SkillNodeId {
+  return n > 15 ? 'count_1_20' : n > 10 ? 'count_1_15' : 'count_1_10'
 }
 
 /** Generate a unique ID */

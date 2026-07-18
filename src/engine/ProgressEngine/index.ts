@@ -1,14 +1,15 @@
 import type { Profile, DailyMission, Pillar } from '@/types'
 import { uid, todayISO, pickRandom } from '@/utils/helpers'
 
-const MISSION_TEMPLATES: Array<{ label: string; description: string; pillar: Pillar; target: number }> = [
-  { label: 'Count to 15', description: 'Answer 3 counting questions correctly', pillar: 'numbers',   target: 3 },
-  { label: 'Letter Hunt', description: 'Match 5 letters correctly',            pillar: 'alphabets', target: 5 },
-  { label: 'Color Hero',  description: 'Sort 4 heroes by color',               pillar: 'colors',    target: 4 },
-  { label: 'Memory Pro',  description: 'Complete 3 memory games',              pillar: 'memory',    target: 3 },
-  { label: 'Logic Star',  description: 'Solve 3 logic puzzles',                pillar: 'logic',     target: 3 },
-  { label: 'Find 5 Red',  description: 'Find 5 red-colored heroes',            pillar: 'colors',    target: 5 },
-  { label: 'Streak Hero', description: 'Get 5 correct answers in a row',       pillar: 'logic',     target: 5 }
+// One uniform semantic — "N correct answers in pillar X" — so a single hook
+// in profileStore.recordAnswer can advance every mission type.
+const MISSION_TEMPLATES: Array<{ label: string; description: string; pillar: Pillar | 'any'; target: number }> = [
+  { label: 'Number Ninja', description: 'Get 3 number answers right',   pillar: 'numbers',   target: 3 },
+  { label: 'Letter Hunt',  description: 'Get 3 letter answers right',   pillar: 'alphabets', target: 3 },
+  { label: 'Color Hero',   description: 'Get 3 color answers right',    pillar: 'colors',    target: 3 },
+  { label: 'Memory Pro',   description: 'Get 3 memory answers right',   pillar: 'memory',    target: 3 },
+  { label: 'Logic Star',   description: 'Get 3 logic answers right',    pillar: 'logic',     target: 3 },
+  { label: 'Hero Day',     description: 'Get 8 answers right anywhere', pillar: 'any',       target: 8 }
 ]
 
 /** Generate daily missions for today */
@@ -35,6 +36,32 @@ export function refreshMissionsIfNeeded(profile: Profile): DailyMission[] {
 
   if (hasTodayMissions) return profile.dailyMissions
   return generateDailyMissions(3)
+}
+
+export interface MissionProgressResult {
+  missions: DailyMission[]
+  newlyCompleted: DailyMission[]
+}
+
+/** Advance today's missions matching a pillar after a correct answer */
+export function applyMissionProgress(
+  missions: DailyMission[],
+  pillar: Pillar
+): MissionProgressResult {
+  const today = todayISO()
+  const newlyCompleted: DailyMission[] = []
+
+  const updated = missions.map(m => {
+    if (m.completed || m.date !== today) return m
+    if (m.pillar !== pillar && m.pillar !== 'any') return m
+    const progress = m.progress + 1
+    const completed = progress >= m.target
+    const next = { ...m, progress, completed }
+    if (completed) newlyCompleted.push(next)
+    return next
+  })
+
+  return { missions: updated, newlyCompleted }
 }
 
 /** Universe completion percentage */

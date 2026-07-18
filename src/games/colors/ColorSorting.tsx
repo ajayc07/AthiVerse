@@ -11,6 +11,7 @@ import { GameHeader } from '@/components/GameHeader'
 import { useProfileStore } from '@/store/profileStore'
 import { useGameStore } from '@/store/gameStore'
 import { useAudio } from '@/hooks/useAudio'
+import { useIdleNudge } from '@/hooks/useIdleNudge'
 import { shuffle, weightedPickCharacters, pickOne, colorToHex } from '@/utils/helpers'
 import type { Character } from '@/types'
 import allCharacters from '@/data/characters.json'
@@ -51,12 +52,14 @@ export function ColorSorting({ universe, onComplete }: Props) {
   const { playCorrect, playWrong, playChar } = useAudio()
   const favorites = profile?.favoriteCharacters ?? []
 
-  const [round, setRound] = useState(() => buildRound(favorites, universe))
+  // Fall back to the full pool when the chosen universe can't fill a round
+  const [round, setRound] = useState(() => buildRound(favorites, universe) ?? buildRound(favorites))
   const [questionNum, setQuestionNum] = useState(1)
   const [selected, setSelected] = useState<string | null>(null)
   const [celebrate, setCelebrate] = useState(false)
   const [stars, setStars] = useState(0)
   const [done, setDone] = useState(false)
+  const nudge = useIdleNudge(questionNum, 6000, selected === null && !done)
 
   const advance = useCallback(() => {
     setCelebrate(false)
@@ -84,7 +87,7 @@ export function ColorSorting({ universe, onComplete }: Props) {
     })
 
     if (correct) { setStars(s => s + 1); setCelebrate(true) }
-    else setTimeout(advance, 1200)
+    else setTimeout(advance, 2000)
   }, [selected, round, questionNum, advance])
 
   useEffect(() => { if (done) onComplete(stars) }, [done, stars, onComplete])
@@ -109,16 +112,17 @@ export function ColorSorting({ universe, onComplete }: Props) {
             className="w-20 h-20 rounded-2xl border-4 border-white/40 shadow-xl"
             style={{ backgroundColor: colorHex }}
           />
-          <p className="text-white text-2xl font-bold capitalize">
+          <p className="text-white text-2xl font-hero capitalize">
             Find the {round.targetColor} hero! 🎨
           </p>
         </motion.div>
 
         {/* Characters */}
-        <div className="flex gap-4 justify-center flex-wrap">
+        <div className={`flex gap-4 justify-center flex-wrap ${nudge ? 'animate-wiggle' : ''}`}>
           {round.chars.map(char => {
             const isSelected = selected === char.id
-            const isCorrect = isSelected && char.id === round.correctId
+            // After any pick, reveal the correct hero so the child learns the color
+            const isCorrect = selected !== null && char.id === round.correctId
             const isWrong = isSelected && char.id !== round.correctId
 
             return (

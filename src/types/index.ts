@@ -154,6 +154,7 @@ export interface AgeConfig {
 export interface ParentSettings {
   maxSessionMinutes: number
   soundEnabled: boolean
+  hapticsEnabled: boolean
   difficultyMode: 'adaptive' | 'easy' | 'hard'
   unlockAllUniverses: boolean
   allowFreePlay: boolean
@@ -168,6 +169,7 @@ export interface Profile {
   totalCorrect: number
   totalAttempts: number
   currentStreak: number
+  gamesCompleted: number
   favoriteCharacters: string[]
   unlockedUniverses: Universe[]
   unlockedBackgrounds: string[]
@@ -186,7 +188,7 @@ export interface DailyMission {
   id: string
   label: string
   description: string
-  pillar: Pillar
+  pillar: Pillar | 'any'
   target: number
   progress: number
   completed: boolean

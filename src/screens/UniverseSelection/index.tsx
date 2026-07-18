@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { useGameStore } from '@/store/gameStore'
 import { useProfileStore } from '@/store/profileStore'
 import { playClick } from '@/utils/audio'
+import { Button } from '@/components/Button'
 import type { Universe } from '@/types'
 import allCharacters from '@/data/characters.json'
 import type { Character } from '@/types'
@@ -35,12 +36,7 @@ export function UniverseSelectionScreen() {
     <div className="flex flex-col h-full bg-gradient-to-b from-indigo-900 via-purple-900 to-slate-900">
       {/* Header */}
       <div className="flex items-center gap-3 px-5 pt-8 pb-6">
-        <button
-          onClick={() => { playClick(); navigate('home') }}
-          className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white text-lg"
-        >
-          ←
-        </button>
+        <Button variant="icon" onClick={() => navigate('home')}>←</Button>
         <div>
           <h1 className="text-white font-bold text-2xl">Choose Universe</h1>
           <p className="text-white/50 text-sm">Which world do you want to explore?</p>

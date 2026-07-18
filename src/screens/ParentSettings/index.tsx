@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useGameStore } from '@/store/gameStore'
 import { useProfileStore } from '@/store/profileStore'
 import { playClick } from '@/utils/audio'
+import { Button } from '@/components/Button'
 
 export function ParentSettingsScreen() {
   const navigate = useGameStore(s => s.navigate)
@@ -37,12 +38,9 @@ export function ParentSettingsScreen() {
   if (!unlocked) {
     return (
       <div className="flex flex-col h-full bg-gradient-to-b from-indigo-900 to-slate-900 items-center justify-center px-6">
-        <button
-          onClick={() => { playClick(); navigate('home') }}
-          className="absolute top-8 left-5 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white"
-        >
-          ←
-        </button>
+        <div className="absolute top-8 left-5">
+          <Button variant="icon" onClick={() => navigate('home')}>←</Button>
+        </div>
 
         <motion.div
           initial={{ scale: 0 }}
@@ -85,19 +83,15 @@ export function ParentSettingsScreen() {
   return (
     <div className="flex flex-col h-full bg-gradient-to-b from-indigo-900 to-slate-900 overflow-auto">
       <div className="flex items-center gap-3 px-5 pt-8 pb-4">
-        <button
-          onClick={() => { playClick(); navigate('home') }}
-          className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white text-lg"
-        >
-          ←
-        </button>
+        <Button variant="icon" onClick={() => navigate('home')}>←</Button>
         <h1 className="text-white font-bold text-2xl">⚙️ Parent Settings</h1>
       </div>
 
       <div className="px-5 space-y-4 pb-8">
         {/* Toggles */}
         {[
-          { key: 'soundEnabled' as const,      label: 'Sound Effects',        desc: 'Enable audio feedback', emoji: '🔊' },
+          { key: 'soundEnabled' as const,       label: 'Sound Effects',        desc: 'Enable audio feedback', emoji: '🔊' },
+          { key: 'hapticsEnabled' as const,     label: 'Vibration',            desc: 'Buzz on taps and answers', emoji: '📳' },
           { key: 'unlockAllUniverses' as const, label: 'Unlock All Universes', desc: 'Allow access to all worlds', emoji: '🔓' },
           { key: 'allowFreePlay' as const,      label: 'Free Play Mode',       desc: 'Explore without missions', emoji: '🎮' }
         ].map(item => (

@@ -12,6 +12,14 @@ import { WhoAmI } from './logic/WhoAmI'
 import { FindTheOddOne } from './logic/FindTheOddOne'
 import { SortByAttribute } from './logic/SortByAttribute'
 import { TraceNumbers } from './numbers/TraceNumbers'
+import { TapAndCount } from './numbers/TapAndCount'
+import { NumberHunt } from './numbers/NumberHunt'
+import { AlphabetSequence } from './alphabets/AlphabetSequence'
+import { RememberTheOrder } from './memory/RememberTheOrder'
+import { CharacterDisappears } from './memory/CharacterDisappears'
+import { PatternBuilder } from './logic/PatternBuilder'
+import { CompareAndChoose } from './logic/CompareAndChoose'
+import { Button } from '@/components/Button'
 
 interface GameRouterProps {
   gameId: GameId
@@ -33,7 +41,16 @@ export function GameRouter({ gameId, universe, onComplete }: GameRouterProps) {
     case 'sort_by_attribute': return <SortByAttribute onComplete={onComplete} />
     case 'trace_numbers':     return <TraceNumbers {...props} />
 
-    // Tier 2 — coming soon
+    // Tier 2
+    case 'tap_and_count':        return <TapAndCount {...props} />
+    case 'number_hunt':          return <NumberHunt {...props} />
+    case 'alphabet_sequence':    return <AlphabetSequence onComplete={onComplete} />
+    case 'remember_order':       return <RememberTheOrder {...props} />
+    case 'character_disappears': return <CharacterDisappears {...props} />
+    case 'pattern_builder':      return <PatternBuilder {...props} />
+    case 'compare_and_choose':   return <CompareAndChoose {...props} />
+
+    // Safety net for unknown game ids
     default:
       return (
         <div className="flex-1 flex items-center justify-center text-white text-center p-8">
@@ -41,12 +58,9 @@ export function GameRouter({ gameId, universe, onComplete }: GameRouterProps) {
             <p className="text-4xl mb-4">🚧</p>
             <p className="text-xl font-bold">Coming Soon!</p>
             <p className="text-white/60 mt-2">This game is being built</p>
-            <button
-              onClick={() => onComplete(0)}
-              className="mt-6 bg-white/20 text-white px-6 py-2 rounded-xl"
-            >
+            <Button variant="ghost" className="mt-6" onClick={() => onComplete(0)}>
               Go Back
-            </button>
+            </Button>
           </div>
         </div>
       )

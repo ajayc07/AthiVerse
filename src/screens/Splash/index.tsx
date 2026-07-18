@@ -50,7 +50,7 @@ export function SplashScreen() {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="text-5xl font-bold text-white tracking-tight"
+          className="text-5xl font-hero text-white tracking-tight"
         >
           AthiVerse
         </motion.h1>

@@ -11,11 +11,11 @@ import { GameHeader } from '@/components/GameHeader'
 import { useProfileStore } from '@/store/profileStore'
 import { useGameStore } from '@/store/gameStore'
 import { useAudio } from '@/hooks/useAudio'
-import { shuffle, pickRandom, pickOne } from '@/utils/helpers'
+import { shuffle, pickRandom } from '@/utils/helpers'
 import type { Character } from '@/types'
 import allCharacters from '@/data/characters.json'
 
-const TOTAL_ROUNDS = 4
+const TOTAL_ROUNDS = 5
 
 const ATTRIBUTES = [
   { key: 'canFly' as const,      label: 'can fly',        emoji: '🦅' },
@@ -23,9 +23,10 @@ const ATTRIBUTES = [
   { key: 'canUseSword' as const, label: 'uses a sword',   emoji: '⚔️' }
 ]
 
-function buildRound() {
+type Attribute = typeof ATTRIBUTES[number]
+
+function buildRound(attr: Attribute) {
   const pool = allCharacters as Character[]
-  const attr = pickOne(ATTRIBUTES)
 
   const withAttr = pool.filter(c => c[attr.key])
   const withoutAttr = pool.filter(c => !c[attr.key])
@@ -51,7 +52,9 @@ export function SortByAttribute({ onComplete }: Props) {
   const recordResult = useGameStore(s => s.recordResult)
   const { playCorrect, playWrong, playChar } = useAudio()
 
-  const [round, setRound] = useState(() => buildRound())
+  // Cycle a shuffled attribute list so no attribute (sword covers half the roster) dominates
+  const [attrQueue] = useState(() => shuffle(ATTRIBUTES))
+  const [round, setRound] = useState(() => buildRound(attrQueue[0]))
   const [questionNum, setQuestionNum] = useState(1)
   const [picked, setPicked] = useState<Set<string>>(new Set())
   const [submitted, setSubmitted] = useState(false)
@@ -65,8 +68,8 @@ export function SortByAttribute({ onComplete }: Props) {
     setPicked(new Set())
     if (questionNum >= TOTAL_ROUNDS) { setDone(true); return }
     setQuestionNum(q => q + 1)
-    setRound(buildRound())
-  }, [questionNum])
+    setRound(buildRound(attrQueue[questionNum % attrQueue.length]))
+  }, [questionNum, attrQueue])
 
   const togglePick = useCallback((id: string) => {
     if (submitted || !round) return
@@ -97,7 +100,7 @@ export function SortByAttribute({ onComplete }: Props) {
     })
 
     if (isCorrect) { setStars(s => s + 1); setCelebrate(true) }
-    else setTimeout(advance, 1500)
+    else setTimeout(advance, 2000)
   }, [round, submitted, picked, questionNum, advance])
 
   useEffect(() => { if (done) onComplete(stars) }, [done, stars, onComplete])

@@ -3,7 +3,7 @@
  * Shows N character cards. Child taps the correct number.
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CharacterCard } from '@/components/CharacterCard'
 import { CelebrationOverlay } from '@/components/CelebrationOverlay'
@@ -11,7 +11,8 @@ import { GameHeader } from '@/components/GameHeader'
 import { useProfileStore } from '@/store/profileStore'
 import { useGameStore } from '@/store/gameStore'
 import { useAudio } from '@/hooks/useAudio'
-import { shuffle, pickRandom } from '@/utils/helpers'
+import { useIdleNudge } from '@/hooks/useIdleNudge'
+import { pickRandom, buildAdjacentOptions, countingNodeFor } from '@/utils/helpers'
 import type { Character } from '@/types'
 import allCharacters from '@/data/characters.json'
 
@@ -33,18 +34,7 @@ function buildRound(maxCount: number, universe?: string): Round {
   const correctCount = Math.floor(Math.random() * effectiveMax) + 1
   const chars = pickRandom(pool, correctCount)
 
-  // Build adjacent distractors so wrong options are always plausible
-  const wrongOptions = new Set<number>()
-  for (let delta = 1; wrongOptions.size < 2; delta++) {
-    if (correctCount - delta >= 1) wrongOptions.add(correctCount - delta)
-    if (wrongOptions.size < 2 && correctCount + delta <= effectiveMax) wrongOptions.add(correctCount + delta)
-    if (delta > effectiveMax) break
-  }
-  // Fallback: fill with any valid number if adjacency couldn't produce 2 values
-  for (let n = 1; wrongOptions.size < 2; n++) {
-    if (n !== correctCount) wrongOptions.add(n)
-  }
-  const options = shuffle([correctCount, ...Array.from(wrongOptions).slice(0, 2)])
+  const options = buildAdjacentOptions(correctCount, effectiveMax)
 
   return { characters: chars, correctCount, options }
 }
@@ -69,7 +59,8 @@ export function HeroCounting({ universe, onComplete }: Props) {
   const [celebrate, setCelebrate] = useState(false)
   const [stars, setStars] = useState(0)
   const [done, setDone] = useState(false)
-  const startTime = useState(() => Date.now())[0]
+  const startTimeRef = useRef(Date.now())
+  const nudge = useIdleNudge(questionNum, 6000, selected === null && !done)
 
   const advance = useCallback(() => {
     setCelebrate(false)
@@ -80,6 +71,7 @@ export function HeroCounting({ universe, onComplete }: Props) {
     }
     setQuestionNum(q => q + 1)
     setRound(buildRound(maxCount, universe))
+    startTimeRef.current = Date.now()
   }, [questionNum, maxCount, universe])
 
   const handleAnswer = useCallback(async (n: number) => {
@@ -87,14 +79,15 @@ export function HeroCounting({ universe, onComplete }: Props) {
     const correct = n === round.correctCount
     setSelected(n)
 
+    const skillNode = countingNodeFor(round.correctCount)
     await (correct ? playCorrect() : playWrong())
-    await recordAnswer('count_1_10', correct)
+    await recordAnswer(skillNode, correct)
     recordResult({
       questionId: `count-${questionNum}`,
       templateId: 'count_objects',
-      skillNode: 'count_1_10',
+      skillNode,
       correct,
-      timeMs: Date.now() - startTime,
+      timeMs: Date.now() - startTimeRef.current,
       answeredAt: new Date().toISOString()
     })
 
@@ -102,7 +95,7 @@ export function HeroCounting({ universe, onComplete }: Props) {
       setStars(s => s + 1)
       setCelebrate(true)
     } else {
-      setTimeout(advance, 1000)
+      setTimeout(advance, 2000)
     }
   }, [selected, round, questionNum, advance])
 
@@ -125,7 +118,7 @@ export function HeroCounting({ universe, onComplete }: Props) {
           key={questionNum}
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-white text-2xl font-bold text-center"
+          className="text-white text-2xl font-hero text-center"
         >
           How many heroes do you see? 👀
         </motion.div>
@@ -150,26 +143,27 @@ export function HeroCounting({ universe, onComplete }: Props) {
         </motion.div>
 
         {/* Number options */}
-        <div className="flex gap-4 mt-2">
+        <div className={`flex gap-4 mt-2 ${nudge ? 'animate-wiggle' : ''}`}>
           {round.options.map(n => {
-            const isSelected = selected === n
-            const isCorrect = isSelected && n === round.correctCount
-            const isWrong = isSelected && n !== round.correctCount
+            // After any pick, always reveal the correct number in green so the child learns it
+            const revealed = selected !== null
+            const showCorrect = revealed && n === round.correctCount
+            const isWrong = selected === n && n !== round.correctCount
 
             return (
               <motion.button
                 key={n}
                 whileHover={!selected ? { scale: 1.1 } : {}}
                 whileTap={!selected ? { scale: 0.9 } : {}}
-                animate={isWrong ? { x: [0, -10, 10, -10, 10, 0] } : isCorrect ? { scale: [1, 1.2, 1] } : {}}
-                transition={{ duration: 0.4 }}
+                animate={isWrong ? { x: [0, -10, 10, -10, 10, 0] } : showCorrect ? { scale: [1, 1.2, 1, 1.15, 1] } : {}}
+                transition={{ duration: 0.6 }}
                 onClick={() => handleAnswer(n)}
                 disabled={selected !== null}
                 className={`
                   w-20 h-20 rounded-2xl text-4xl font-bold border-4 transition-all
-                  ${isCorrect ? 'bg-green-400 border-green-300 text-white' : ''}
+                  ${showCorrect ? 'bg-green-400 border-green-300 text-white' : ''}
                   ${isWrong ? 'bg-red-400 border-red-300 text-white' : ''}
-                  ${!isSelected ? 'bg-white/10 border-white/30 text-white hover:bg-white/20' : ''}
+                  ${!showCorrect && !isWrong ? 'bg-white/10 border-white/30 text-white hover:bg-white/20' : ''}
                 `}
               >
                 {n}

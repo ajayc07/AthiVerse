@@ -2,15 +2,27 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '@/store/gameStore'
 import { useProfileStore } from '@/store/profileStore'
+import { useAudio } from '@/hooks/useAudio'
 import { MILESTONES } from '@/engine/RewardEngine'
+import { CharacterCard } from '@/components/CharacterCard'
+import { Button } from '@/components/Button'
+import { pickOne } from '@/utils/helpers'
+import type { Character } from '@/types'
+import allCharacters from '@/data/characters.json'
 
 export function RewardScreen() {
   const navigate = useGameStore(s => s.navigate)
   const lastSession = useGameStore(s => s.lastSessionResults)
+  const pendingStars = useGameStore(s => s.pendingStars)
   const profile = useProfileStore(s => s.activeProfile)
+  const recentAchievements = useProfileStore(s => s.recentAchievements)
+  const clearRecentAchievements = useProfileStore(s => s.clearRecentAchievements)
+  const { playCelebration } = useAudio()
   const [showConfetti, setShowConfetti] = useState(true)
 
-  const stars = lastSession?.starsEarned ?? 0
+  const sessionStars = lastSession?.starsEarned ?? 0
+  const stars = Math.max(pendingStars, sessionStars)
+  const bonus = Math.max(0, stars - sessionStars)
   const correct = lastSession?.questions.filter(q => q.correct).length ?? 0
   const total = lastSession?.questions.length ?? 0
   const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0
@@ -21,18 +33,30 @@ export function RewardScreen() {
     m => m.stars > previousStars && m.stars <= (profile?.totalStars ?? 0)
   )
 
+  // A favorite hero cheers the child on
+  const [cameo] = useState<Character | null>(() => {
+    const favorites = useProfileStore.getState().activeProfile?.favoriteCharacters ?? []
+    const pool = (allCharacters as Character[]).filter(c => favorites.includes(c.id))
+    return pool.length > 0 ? pickOne(pool) : null
+  })
+
   useEffect(() => {
+    if (stars > 0) playCelebration().catch(() => {})
     const t = setTimeout(() => setShowConfetti(false), 3000)
     return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Achievements are shown once, then cleared for the next session
+  useEffect(() => () => clearRecentAchievements(), [clearRecentAchievements])
+
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-indigo-900 via-purple-900 to-slate-900 items-center justify-center px-6">
+    <div className="flex flex-col h-full bg-gradient-to-b from-indigo-900 via-purple-900 to-slate-900 items-center justify-center px-6 overflow-auto">
       {/* Confetti particles */}
       <AnimatePresence>
         {showConfetti && (
           <div className="fixed inset-0 pointer-events-none">
-            {Array.from({ length: 20 }).map((_, i) => (
+            {Array.from({ length: 30 }).map((_, i) => (
               <motion.div
                 key={i}
                 className="absolute text-2xl"
@@ -47,21 +71,47 @@ export function RewardScreen() {
         )}
       </AnimatePresence>
 
-      {/* Stars earned */}
+      {/* Trophy + headline */}
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: 'spring', stiffness: 200 }}
-        className="text-center mb-8"
+        className="text-center mb-6"
       >
-        <div className="text-7xl mb-2">🏆</div>
-        <h1 className="text-white font-bold text-4xl">
+        <motion.div
+          className="text-7xl mb-2"
+          animate={{ rotate: [0, -8, 8, 0] }}
+          transition={{ duration: 2.2, repeat: Infinity, repeatDelay: 1 }}
+        >
+          🏆
+        </motion.div>
+        <h1 className="text-white font-hero text-4xl">
           {stars > 0 ? 'Amazing!' : 'Keep trying!'}
         </h1>
         <p className="text-white/60 mt-1">
           {correct} out of {total} correct
         </p>
       </motion.div>
+
+      {/* Favorite hero cheers */}
+      {cameo && (
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="flex items-center gap-3 mb-5"
+        >
+          <motion.div
+            animate={{ y: [0, -6, 0] }}
+            transition={{ duration: 1.4, repeat: Infinity }}
+          >
+            <CharacterCard character={cameo} size="sm" animate={false} />
+          </motion.div>
+          <p className="text-white/80 font-bold">
+            {stars > 0 ? `${cameo.name} says: Great job! 💪` : `${cameo.name} believes in you! 💪`}
+          </p>
+        </motion.div>
+      )}
 
       {/* Stars display */}
       <motion.div
@@ -74,8 +124,8 @@ export function RewardScreen() {
           <motion.span
             key={i}
             initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.4 + i * 0.1 }}
+            animate={{ scale: i < stars ? [0, 1.4, 1] : 1 }}
+            transition={{ delay: 0.4 + i * 0.12 }}
             className="text-3xl"
           >
             {i < stars ? '⭐' : '☆'}
@@ -88,12 +138,18 @@ export function RewardScreen() {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="w-full max-w-xs bg-white/10 rounded-2xl p-4 mb-6 border border-white/20 space-y-2"
+        className="w-full max-w-xs bg-white/10 rounded-2xl p-4 mb-5 border border-white/20 space-y-2"
       >
         <div className="flex justify-between text-white">
           <span className="text-white/60">Stars earned</span>
           <span className="font-bold">+{stars} ⭐</span>
         </div>
+        {bonus > 0 && (
+          <div className="flex justify-between text-white">
+            <span className="text-white/60">Perfect bonus</span>
+            <span className="font-bold text-amber-300">+{bonus} 🌟</span>
+          </div>
+        )}
         <div className="flex justify-between text-white">
           <span className="text-white/60">Accuracy</span>
           <span className="font-bold">{accuracy}%</span>
@@ -104,13 +160,34 @@ export function RewardScreen() {
         </div>
       </motion.div>
 
+      {/* Newly unlocked achievements */}
+      {recentAchievements.length > 0 && (
+        <div className="w-full max-w-xs mb-5 space-y-2">
+          {recentAchievements.map((a, i) => (
+            <motion.div
+              key={a.id}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.7 + i * 0.15, type: 'spring' }}
+              className="bg-purple-400/20 border border-purple-400/40 rounded-2xl px-4 py-3 flex items-center gap-3"
+            >
+              <span className="text-3xl">{a.icon}</span>
+              <div>
+                <p className="text-purple-200 font-bold">{a.label}</p>
+                <p className="text-purple-200/60 text-sm">Achievement unlocked!</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
       {/* Milestones */}
       {newMilestones.length > 0 && (
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.8, type: 'spring' }}
-          className="w-full max-w-xs mb-6"
+          className="w-full max-w-xs mb-5 space-y-2"
         >
           {newMilestones.map(m => (
             <div
@@ -134,18 +211,12 @@ export function RewardScreen() {
         transition={{ delay: 0.7 }}
         className="flex gap-3 w-full max-w-xs"
       >
-        <button
-          onClick={() => navigate('game_selection')}
-          className="flex-1 bg-white/10 text-white font-bold py-3 rounded-2xl border border-white/20"
-        >
+        <Button variant="ghost" className="flex-1" onClick={() => navigate('game_selection')}>
           Play Again
-        </button>
-        <button
-          onClick={() => navigate('home')}
-          className="flex-1 bg-indigo-500 text-white font-bold py-3 rounded-2xl"
-        >
+        </Button>
+        <Button variant="primary" className="flex-1" onClick={() => navigate('home')}>
           Home 🏠
-        </button>
+        </Button>
       </motion.div>
     </div>
   )

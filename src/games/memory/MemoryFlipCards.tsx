@@ -3,7 +3,7 @@
  * Classic pairs memory game with character cards.
  */
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { CharacterCard } from '@/components/CharacterCard'
 import { CelebrationOverlay } from '@/components/CelebrationOverlay'
@@ -59,6 +59,7 @@ export function MemoryFlipCards({ universe, onComplete }: Props) {
   const [celebrate, setCelebrate] = useState(false)
   const [stars, setStars] = useState(0)
   const [done, setDone] = useState(false)
+  const attemptRef = useRef(0)
 
   const totalPairs = pairs
 
@@ -79,33 +80,38 @@ export function MemoryFlipCards({ universe, onComplete }: Props) {
       const first = cards.find(c => c.id === firstId)!
       const second = cards.find(c => c.id === secondId)!
 
+      attemptRef.current += 1
       if (first.charId === second.charId) {
         // Match!
         await playCorrect()
         setCards(prev => prev.map(c =>
           c.id === firstId || c.id === secondId ? { ...c, matched: true } : c
         ))
-        const newMatchCount = matchCount + 1
-        setMatchCount(newMatchCount)
+        setMatchCount(m => m + 1)
         setStars(s => s + 1)
         setCelebrate(true)
         await recordAnswer('memory_sequence_2', true)
         recordResult({
-          questionId: `memory-${matchCount}`,
+          questionId: `memory-attempt-${attemptRef.current}`,
           templateId: 'find_character',
           skillNode: 'memory_sequence_2',
           correct: true,
           timeMs: 0,
           answeredAt: new Date().toISOString()
         })
-
-        if (newMatchCount === totalPairs) {
-          setDone(true)
-        }
+        // Game end waits for the celebration so the last one isn't cut off
       } else {
         // No match
         await playWrong()
         await recordAnswer('memory_sequence_2', false)
+        recordResult({
+          questionId: `memory-attempt-${attemptRef.current}`,
+          templateId: 'find_character',
+          skillNode: 'memory_sequence_2',
+          correct: false,
+          timeMs: 0,
+          answeredAt: new Date().toISOString()
+        })
         setTimeout(() => {
           setCards(prev => prev.map(c =>
             c.id === firstId || c.id === secondId ? { ...c, flipped: false } : c
@@ -122,7 +128,8 @@ export function MemoryFlipCards({ universe, onComplete }: Props) {
 
   const handleCelebrationDone = useCallback(() => {
     setCelebrate(false)
-  }, [])
+    if (matchCount === totalPairs) setDone(true)
+  }, [matchCount, totalPairs])
 
   useEffect(() => { if (done) onComplete(stars) }, [done, stars, onComplete])
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useAudio } from '@/hooks/useAudio'
 
 interface Props {
   show: boolean
@@ -31,13 +32,20 @@ function makeParticles(count = 12): Particle[] {
 }
 
 export function CelebrationOverlay({ show, message, onDone }: Props) {
-  const [particles] = useState<Particle[]>(makeParticles)
-  const displayMessage = message ?? MESSAGES[Math.floor(Math.random() * MESSAGES.length)]
+  const [particles, setParticles] = useState<Particle[]>(makeParticles)
+  const [displayMessage, setDisplayMessage] = useState(MESSAGES[0])
+  const { playCelebration } = useAudio()
   const onDoneRef = useRef(onDone)
   useEffect(() => { onDoneRef.current = onDone })
+  const playCelebrationRef = useRef(playCelebration)
+  useEffect(() => { playCelebrationRef.current = playCelebration })
 
   useEffect(() => {
     if (!show) return
+    // Fresh burst + message every celebration, with sound and haptic
+    setParticles(makeParticles())
+    setDisplayMessage(MESSAGES[Math.floor(Math.random() * MESSAGES.length)])
+    playCelebrationRef.current().catch(() => {})
     const t = setTimeout(() => onDoneRef.current?.(), 1800)
     return () => clearTimeout(t)
   }, [show])
@@ -75,7 +83,7 @@ export function CelebrationOverlay({ show, message, onDone }: Props) {
             initial={{ scale: 0, rotate: -10 }}
             animate={{ scale: [0, 1.3, 1], rotate: [0, 5, 0] }}
             transition={{ duration: 0.5, type: 'spring' }}
-            className="bg-yellow-400 text-slate-900 font-bold text-4xl px-8 py-4 rounded-3xl shadow-2xl"
+            className="bg-yellow-400 text-slate-900 font-hero text-4xl px-8 py-4 rounded-3xl shadow-2xl"
           >
             {displayMessage}
           </motion.div>

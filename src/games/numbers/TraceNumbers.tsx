@@ -11,7 +11,7 @@ import { GameHeader } from '@/components/GameHeader'
 import { useProfileStore } from '@/store/profileStore'
 import { useGameStore } from '@/store/gameStore'
 import { useAudio } from '@/hooks/useAudio'
-import { pickOne, colorToHex } from '@/utils/helpers'
+import { pickRandom, colorToHex } from '@/utils/helpers'
 import type { Character } from '@/types'
 import allCharacters from '@/data/characters.json'
 
@@ -48,7 +48,9 @@ export function TraceNumbers({ universe, onComplete }: Props) {
   const recordResult = useGameStore(s => s.recordResult)
   const { playCorrect, playWrong } = useAudio()
 
-  const [currentNumber, setCurrentNumber] = useState(() => pickOne(NUMBERS))
+  // 5 distinct digits per game so the same number never repeats within a session
+  const [numberQueue] = useState(() => pickRandom(NUMBERS, TOTAL_ROUNDS))
+  const [currentNumber, setCurrentNumber] = useState(() => numberQueue[0])
   const [character, setCharacter]         = useState<Character>(() => pickChar(universe))
   const [questionNum, setQuestionNum]     = useState(1)
   const [nextDot, setNextDot]             = useState(0)
@@ -69,9 +71,9 @@ export function TraceNumbers({ universe, onComplete }: Props) {
     setCompleted(false)
     if (questionNum >= TOTAL_ROUNDS) { setDone(true); return }
     setQuestionNum(q => q + 1)
-    setCurrentNumber(pickOne(NUMBERS))
+    setCurrentNumber(numberQueue[questionNum])
     setCharacter(pickChar(universe))
-  }, [questionNum, universe])
+  }, [questionNum, universe, numberQueue])
 
   const handleDotTap = useCallback(async (index: number) => {
     if (completed) return

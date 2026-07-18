@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion'
 import { StarCounter } from '@/components/StarCounter'
 import { ProgressBar } from '@/components/ProgressBar'
+import { Button } from '@/components/Button'
 import { useGameStore } from '@/store/gameStore'
-import { playClick } from '@/utils/audio'
 
 interface Props {
   title: string
@@ -18,17 +18,14 @@ export function GameHeader({ title, current, total, stars, onBack }: Props) {
   return (
     <div className="w-full px-4 pt-4 pb-2 space-y-2">
       <div className="flex items-center justify-between">
-        <button
-          onClick={() => { playClick(); (onBack ?? (() => navigate('home')))() }}
-          className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white text-lg active:scale-90 transition-transform"
-        >
+        <Button variant="icon" onClick={onBack ?? (() => navigate('home'))}>
           ←
-        </button>
+        </Button>
 
         <motion.h2
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-white font-bold text-lg"
+          className="text-white font-hero text-lg"
         >
           {title}
         </motion.h2>

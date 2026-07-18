@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion'
 import { useGameStore } from '@/store/gameStore'
 import { useProfileStore } from '@/store/profileStore'
+import { suggestSkillNode } from '@/engine/DifficultyEngine/masteryScore'
+import { Button } from '@/components/Button'
 import { playClick } from '@/utils/audio'
-import type { GameId, GameMeta } from '@/types'
+import type { GameMeta } from '@/types'
 import gamesData from '@/data/games.json'
 
 const PILLAR_COLORS: Record<string, string> = {
@@ -23,6 +25,9 @@ export function GameSelectionScreen() {
   const tier1 = games.filter(g => g.tier === 1)
   const tier2 = games.filter(g => g.tier === 2)
 
+  // Spaced repetition: badge the games that practice the most overdue skill
+  const suggested = profile ? suggestSkillNode(profile.skillNodes) : null
+
   const handlePlay = (game: GameMeta) => {
     if (!profile) return
     playClick()
@@ -34,12 +39,7 @@ export function GameSelectionScreen() {
     <div className="flex flex-col h-full bg-gradient-to-b from-indigo-900 via-purple-900 to-slate-900">
       {/* Header */}
       <div className="flex items-center gap-3 px-5 pt-8 pb-4">
-        <button
-          onClick={() => { playClick(); navigate('universe_selection') }}
-          className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white text-lg"
-        >
-          ←
-        </button>
+        <Button variant="icon" onClick={() => navigate('universe_selection')}>←</Button>
         <div>
           <h1 className="text-white font-bold text-2xl">Choose a Game</h1>
           <p className="text-white/50 text-sm">
@@ -55,17 +55,31 @@ export function GameSelectionScreen() {
           <p className="text-white/50 text-xs font-bold uppercase tracking-wide mb-3">⚡ Tier 1 — Play Now</p>
           <div className="space-y-2">
             {tier1.map((game, i) => (
-              <GameCard key={game.id} game={game} index={i} onPlay={() => handlePlay(game)} />
+              <GameCard
+                key={game.id}
+                game={game}
+                index={i}
+                onPlay={() => handlePlay(game)}
+                locked={game.locked}
+                recommended={!!suggested && (game.skillNodes as string[]).includes(suggested.id)}
+              />
             ))}
           </div>
         </div>
 
         {/* Tier 2 */}
         <div>
-          <p className="text-white/50 text-xs font-bold uppercase tracking-wide mb-3">🔒 Tier 2 — Coming Soon</p>
+          <p className="text-white/50 text-xs font-bold uppercase tracking-wide mb-3">🌟 Tier 2 — New Adventures</p>
           <div className="space-y-2">
             {tier2.map((game, i) => (
-              <GameCard key={game.id} game={game} index={tier1.length + i} onPlay={() => handlePlay(game)} locked />
+              <GameCard
+                key={game.id}
+                game={game}
+                index={tier1.length + i}
+                onPlay={() => handlePlay(game)}
+                locked={game.locked}
+                recommended={!!suggested && !game.locked && (game.skillNodes as string[]).includes(suggested.id)}
+              />
             ))}
           </div>
         </div>
@@ -78,12 +92,14 @@ function GameCard({
   game,
   index,
   onPlay,
-  locked = false
+  locked = false,
+  recommended = false
 }: {
   game: GameMeta
   index: number
   onPlay: () => void
   locked?: boolean
+  recommended?: boolean
 }) {
   const color = PILLAR_COLORS[game.pillar] ?? '#6366f1'
 
@@ -109,7 +125,14 @@ function GameCard({
         {game.emoji}
       </div>
       <div className="text-left flex-1">
-        <p className="text-white font-bold">{game.label}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-white font-bold">{game.label}</p>
+          {recommended && (
+            <span className="animate-wiggle px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400/25 text-amber-300 border border-amber-400/40">
+              ⭐ Recommended
+            </span>
+          )}
+        </div>
         <p className="text-white/50 text-sm">{game.description}</p>
       </div>
       <div

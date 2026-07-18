@@ -8,6 +8,8 @@
  *   public/sounds/ui/correct.mp3, wrong.mp3, celebration.mp3, click.mp3, open.mp3
  */
 
+import { haptics } from '@/utils/haptics'
+
 let HowlClass: typeof import('howler').Howl | null = null
 
 async function getHowl() {
@@ -75,7 +77,8 @@ export async function playUI(type: 'correct' | 'wrong' | 'celebration' | 'click'
   await play(`${import.meta.env.BASE_URL}sounds/ui/${type}.mp3`)
 }
 
-/** Fire-and-forget click sound for navigation buttons */
+/** Fire-and-forget click sound + haptic tick for navigation buttons */
 export function playClick(): void {
+  haptics.tap()
   play(`${import.meta.env.BASE_URL}sounds/ui/click.mp3`).catch(() => {})
 }

@@ -1,10 +1,14 @@
+import { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useGameStore } from '@/store/gameStore'
 import { useProfileStore } from '@/store/profileStore'
 import { StarCounter } from '@/components/StarCounter'
+import { Button } from '@/components/Button'
 import { getPillarProgress } from '@/engine/ProgressEngine'
+import { suggestSkillNode } from '@/engine/DifficultyEngine/masteryScore'
 import { playClick } from '@/utils/audio'
-import type { Pillar } from '@/types'
+import type { Pillar, GameMeta } from '@/types'
+import gamesData from '@/data/games.json'
 
 const PILLAR_META: Array<{ id: Pillar; label: string; emoji: string; color: string }> = [
   { id: 'numbers',   label: 'Numbers',   emoji: '🔢', color: '#3b82f6' },
@@ -16,9 +20,32 @@ const PILLAR_META: Array<{ id: Pillar; label: string; emoji: string; color: stri
 
 export function HomeScreen() {
   const navigate = useGameStore(s => s.navigate)
+  const startSession = useGameStore(s => s.startSession)
   const profile = useProfileStore(s => s.activeProfile)
+  const refreshDailyMissions = useProfileStore(s => s.refreshDailyMissions)
+
+  // Regenerate missions when a new day starts while the app stays open
+  useEffect(() => {
+    refreshDailyMissions()
+  }, [refreshDailyMissions])
 
   if (!profile) return null
+
+  // Spaced repetition: suggest the unlocked skill longest overdue for practice
+  const suggested = suggestSkillNode(profile.skillNodes)
+  const games = gamesData as GameMeta[]
+  const suggestedGame = suggested
+    ? games.find(g => !g.locked && (g.skillNodes as string[]).includes(suggested.id))
+      ?? games.find(g => !g.locked && g.pillar === suggested.pillar)
+      ?? null
+    : null
+
+  const playSuggested = () => {
+    if (!suggestedGame) return
+    playClick()
+    startSession(suggestedGame.id, null, profile.id)
+    navigate('gameplay', { gameId: suggestedGame.id })
+  }
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-b from-indigo-900 via-purple-900 to-slate-900 overflow-auto">
@@ -29,16 +56,13 @@ export function HomeScreen() {
           animate={{ x: 0, opacity: 1 }}
         >
           <p className="text-indigo-300 text-sm">Welcome back!</p>
-          <h1 className="text-white font-bold text-3xl">{profile.name} 🦸</h1>
+          <h1 className="text-white font-hero text-3xl">{profile.name} 🦸</h1>
         </motion.div>
         <div className="flex items-center gap-2">
           <StarCounter count={profile.totalStars} />
-          <button
-            onClick={() => { playClick(); navigate('parent_settings') }}
-            className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white/70 text-lg"
-          >
+          <Button variant="icon" onClick={() => navigate('parent_settings')}>
             ⚙️
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -66,12 +90,33 @@ export function HomeScreen() {
         onClick={() => { playClick(); navigate('universe_selection') }}
         className="mx-5 mb-5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl p-6 flex items-center gap-4 shadow-2xl border border-white/10"
       >
-        <span className="text-5xl">▶️</span>
+        <span className="text-5xl animate-float">▶️</span>
         <div className="text-left">
-          <p className="text-white font-bold text-2xl">Play Now!</p>
+          <p className="text-white font-hero text-2xl">Play Now!</p>
           <p className="text-white/70 text-sm">Choose your universe</p>
         </div>
       </motion.button>
+
+      {/* Today's Hero Training — one-tap spaced-repetition suggestion */}
+      {suggestedGame && suggested && (
+        <motion.button
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={playSuggested}
+          className="mx-5 mb-5 bg-gradient-to-r from-amber-500/25 to-orange-500/25 rounded-3xl p-4 flex items-center gap-4 border border-amber-400/40"
+        >
+          <span className="text-4xl animate-float">{suggestedGame.emoji}</span>
+          <div className="text-left flex-1">
+            <p className="text-amber-300 text-xs font-bold uppercase tracking-wide">Today's Hero Training</p>
+            <p className="text-white font-bold text-lg">{suggestedGame.label}</p>
+            <p className="text-white/60 text-xs">Practice {suggested.label}!</p>
+          </div>
+          <span className="text-2xl">🎯</span>
+        </motion.button>
+      )}
 
       {/* Pillar progress */}
       <div className="px-5 mb-5">
@@ -111,16 +156,27 @@ export function HomeScreen() {
           </div>
         ) : (
           <div className="space-y-2">
-            {profile.dailyMissions.map(mission => (
-              <div
+            {profile.dailyMissions.map((mission, i) => (
+              <motion.div
                 key={mission.id}
+                initial={{ opacity: 0, x: -15 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 + i * 0.08 }}
                 className={`flex items-center gap-3 rounded-2xl px-4 py-3 border ${
                   mission.completed
                     ? 'bg-green-500/10 border-green-400/30'
                     : 'bg-white/5 border-white/10'
                 }`}
               >
-                <span className="text-2xl">{mission.completed ? '✅' : '🎯'}</span>
+                <motion.span
+                  key={mission.completed ? 'done' : 'todo'}
+                  initial={mission.completed ? { scale: 0 } : false}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 400 }}
+                  className="text-2xl"
+                >
+                  {mission.completed ? '✅' : '🎯'}
+                </motion.span>
                 <div className="flex-1">
                   <p className="text-white font-bold text-sm">{mission.label}</p>
                   <div className="flex items-center gap-2 mt-1">
@@ -133,7 +189,7 @@ export function HomeScreen() {
                     <p className="text-white/40 text-xs">{mission.progress}/{mission.target}</p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}

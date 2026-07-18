@@ -151,6 +151,7 @@ export function FindTheOddOne({ onComplete }: Props) {
             const isWrong       = isSelected && char.id !== round.oddId
             const isOddReveal   = !!(selected && char.id === round.oddId && !isCorrect)
 
+            // Universe colour is the visual signal the child matches on — always shown
             const borderColor =
               isCorrect || isOddReveal ? '#4ade80'
               : isWrong                ? '#f87171'
@@ -187,14 +188,17 @@ export function FindTheOddOne({ onComplete }: Props) {
                   />
                 </div>
 
-                {/* Universe badge — always visible so child can spot the odd one */}
-                <div
+                {/* Universe badge — revealed only after answering, as a teaching moment
+                    (always visible it labels the answer and bypasses the reasoning) */}
+                <motion.div
+                  animate={{ opacity: selected ? 1 : 0 }}
+                  initial={{ opacity: 0 }}
                   className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-white text-xs font-bold"
                   style={{ background: uColor + 'cc' }}
                 >
                   <span>{uEmoji}</span>
                   <span>{uLabel}</span>
-                </div>
+                </motion.div>
               </motion.div>
             )
           })}

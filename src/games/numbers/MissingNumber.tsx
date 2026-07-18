@@ -3,29 +3,30 @@
  * Shows a sequence with one number missing. Child picks the correct number.
  */
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { CelebrationOverlay } from '@/components/CelebrationOverlay'
 import { GameHeader } from '@/components/GameHeader'
 import { useProfileStore } from '@/store/profileStore'
 import { useGameStore } from '@/store/gameStore'
 import { useAudio } from '@/hooks/useAudio'
-import { shuffle } from '@/utils/helpers'
+import { useIdleNudge } from '@/hooks/useIdleNudge'
+import { shuffle, countingNodeFor } from '@/utils/helpers'
 
 const TOTAL_ROUNDS = 5
 
 function buildRound(maxNum: number) {
   const seqLen = 5
-  const start = Math.floor(Math.random() * (maxNum - seqLen)) + 1
+  const start = Math.floor(Math.random() * (maxNum - seqLen + 1)) + 1
   const sequence = Array.from({ length: seqLen }, (_, i) => start + i)
   const missingIdx = Math.floor(Math.random() * seqLen)
   const missingNum = sequence[missingIdx]
 
-  // Wrong options
+  // Wrong options — never a number already visible in the sequence
   const wrong = new Set<number>()
   while (wrong.size < 2) {
     const w = Math.floor(Math.random() * maxNum) + 1
-    if (w !== missingNum) wrong.add(w)
+    if (w !== missingNum && !sequence.includes(w)) wrong.add(w)
   }
   const options = shuffle([missingNum, ...Array.from(wrong)])
 
@@ -52,6 +53,8 @@ export function MissingNumber({ onComplete }: Props) {
   const [celebrate, setCelebrate] = useState(false)
   const [stars, setStars] = useState(0)
   const [done, setDone] = useState(false)
+  const startTimeRef = useRef(Date.now())
+  const nudge = useIdleNudge(questionNum, 6000, selected === null && !done)
 
   const advance = useCallback(() => {
     setCelebrate(false)
@@ -59,6 +62,7 @@ export function MissingNumber({ onComplete }: Props) {
     if (questionNum >= TOTAL_ROUNDS) { setDone(true); return }
     setQuestionNum(q => q + 1)
     setRound(buildRound(maxNum))
+    startTimeRef.current = Date.now()
   }, [questionNum, maxNum])
 
   const handleAnswer = useCallback(async (n: number) => {
@@ -66,14 +70,15 @@ export function MissingNumber({ onComplete }: Props) {
     const correct = n === round.missingNum
     setSelected(n)
 
+    const skillNode = countingNodeFor(round.missingNum)
     await (correct ? playCorrect() : playWrong())
-    await recordAnswer('count_1_10', correct)
+    await recordAnswer(skillNode, correct)
     recordResult({
       questionId: `missing-${questionNum}`,
       templateId: 'count_objects',
-      skillNode: 'count_1_10',
+      skillNode,
       correct,
-      timeMs: 0,
+      timeMs: Date.now() - startTimeRef.current,
       answeredAt: new Date().toISOString()
     })
 
@@ -81,7 +86,7 @@ export function MissingNumber({ onComplete }: Props) {
       setStars(s => s + 1)
       setCelebrate(true)
     } else {
-      setTimeout(advance, 1200)
+      setTimeout(advance, 2000)
     }
   }, [selected, round, questionNum, advance])
 
@@ -96,7 +101,7 @@ export function MissingNumber({ onComplete }: Props) {
           key={questionNum}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-white text-2xl font-bold text-center"
+          className="text-white text-2xl font-hero text-center"
         >
           What number is missing? 🤔
         </motion.p>
@@ -122,26 +127,27 @@ export function MissingNumber({ onComplete }: Props) {
         </div>
 
         {/* Options */}
-        <div className="flex gap-4">
+        <div className={`flex gap-4 ${nudge ? 'animate-wiggle' : ''}`}>
           {round.options.map(n => {
-            const isSelected = selected === n
-            const isCorrect = isSelected && n === round.missingNum
-            const isWrong = isSelected && n !== round.missingNum
+            // After any pick, always reveal the correct number in green so the child learns it
+            const revealed = selected !== null
+            const showCorrect = revealed && n === round.missingNum
+            const isWrong = selected === n && n !== round.missingNum
 
             return (
               <motion.button
                 key={n}
                 whileHover={!selected ? { scale: 1.1 } : {}}
                 whileTap={!selected ? { scale: 0.9 } : {}}
-                animate={isWrong ? { x: [0, -10, 10, -10, 10, 0] } : isCorrect ? { scale: [1, 1.2, 1] } : {}}
-                transition={{ duration: 0.4 }}
+                animate={isWrong ? { x: [0, -10, 10, -10, 10, 0] } : showCorrect ? { scale: [1, 1.2, 1, 1.15, 1] } : {}}
+                transition={{ duration: 0.6 }}
                 onClick={() => handleAnswer(n)}
                 disabled={selected !== null}
                 className={`
                   w-20 h-20 rounded-2xl text-4xl font-bold border-4 transition-all
-                  ${isCorrect ? 'bg-green-400 border-green-300 text-white' : ''}
+                  ${showCorrect ? 'bg-green-400 border-green-300 text-white' : ''}
                   ${isWrong ? 'bg-red-400 border-red-300 text-white' : ''}
-                  ${!isSelected ? 'bg-white/10 border-white/30 text-white' : ''}
+                  ${!showCorrect && !isWrong ? 'bg-white/10 border-white/30 text-white' : ''}
                 `}
               >
                 {n}

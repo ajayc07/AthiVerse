@@ -130,7 +130,7 @@ export function WhoAmI({ universe, onComplete }: Props) {
 
   // Parse clues: keep only "I …" sentences
   const rawClues = question.prompt
-    .split(/[.!]/)
+    .split(/[.!?]/)
     .map(s => s.trim())
     .filter(s => /^i /i.test(s))
 

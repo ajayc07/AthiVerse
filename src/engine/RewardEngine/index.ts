@@ -1,4 +1,5 @@
-import type { Profile, MilestoneReward, RewardType } from '@/types'
+import type { Profile, MilestoneReward, RewardType, Achievement } from '@/types'
+import { MASTERY_THRESHOLD } from '@/engine/DifficultyEngine/masteryScore'
 
 export const MILESTONES: MilestoneReward[] = [
   { stars: 1,   type: 'star',        label: 'First Star!' },
@@ -36,6 +37,38 @@ export function calculateBonusStars(correct: number, total: number): number {
   if (correct === total) return Math.floor(total * 0.5) // 50% bonus
   if (correct / total >= 0.8) return 1                   // 80%+ gets 1 bonus
   return 0
+}
+
+export interface AchievementCheck {
+  achievements: Achievement[]
+  newlyUnlocked: Achievement[]
+}
+
+/** Evaluate every achievement condition against the profile's current stats */
+export function checkAchievements(profile: Profile): AchievementCheck {
+  const masteredCount = Object.values(profile.skillNodes)
+    .filter(n => n.masteryScore >= MASTERY_THRESHOLD).length
+
+  const valueFor = (a: Achievement): number => {
+    switch (a.condition) {
+      case 'stars':   return profile.totalStars
+      case 'streak':  return profile.currentStreak
+      case 'games':   return profile.gamesCompleted
+      case 'mastery': return masteredCount
+    }
+  }
+
+  const newlyUnlocked: Achievement[] = []
+  const achievements = profile.achievements.map(a => {
+    if (!a.unlocked && valueFor(a) >= a.threshold) {
+      const unlocked = { ...a, unlocked: true, unlockedAt: new Date().toISOString() }
+      newlyUnlocked.push(unlocked)
+      return unlocked
+    }
+    return a
+  })
+
+  return { achievements, newlyUnlocked }
 }
 
 /** Get the celebration type based on streak */
