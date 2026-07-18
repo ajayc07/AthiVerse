@@ -56,14 +56,18 @@ ProgressEngine              RewardEngine (milestone check)
 | `templates.json` | 10 question templates mapped to pillars and skill nodes |
 | `skillNodes.json` | 16 skill nodes across 5 pillars with prerequisite chains |
 | `achievements.json` | 11 achievements with unlock conditions |
-| `games.json` | 15 games (8 Tier 1 live, 7 Tier 2 stubs) with tier and pillar metadata |
+| `games.json` | 16 games (9 Tier 1 + 7 Tier 2, all live) with tier, pillar, and `locked` metadata |
 | `contentPack.config.json` | `activeContentPack` switcher — change pack without touching code |
 
-### Adding a new Tier 2 game
+`GameSelection` respects each game's `locked` flag from `games.json` — there is no hardcoded tier lock.
+
+### Adding a new game
 
 1. Create `src/games/<pillar>/<GameName>.tsx` — export a component that accepts `{ universe?: string, onComplete: (stars: number) => void }`.
-2. Add the import and a `case` to the switch in `src/games/index.tsx` (`GameRouter`).
+2. Add the import and a `case` to the switch in `src/games/index.tsx` (`GameRouter`), and an entry in `games.json`.
 3. No other wiring needed — `GameplayScreen` routes through `GameRouter`.
+
+Follow the house pattern used by every live game: `TOTAL_ROUNDS = 5`, a `buildRound()` that dedupes across the game's rounds, `GameHeader`, `CelebrationOverlay` whose `onDone` advances, correct-answer reveal (~2s) on wrong picks, `recordAnswer` + `recordResult` per answer, `playChar` on character taps, `useIdleNudge` on the options row, and `onComplete(stars)` when done. Guard small pools (Naruto has only 4 characters) by falling back to the full character list.
 
 ### Asset conventions
 
@@ -74,9 +78,25 @@ ProgressEngine              RewardEngine (milestone check)
 - All audio is optional — the `useAudio` hook falls back silently when files are absent.
 - `CharacterCard` falls back to a gradient + first letter when the webp is missing.
 
-### Storage
+### Storage & profile migration
 
 `src/utils/db.ts` wraps IndexedDB via the `idb` library. The `Profile` object (defined in `src/types/index.ts`) is the root of all persisted state. `ProgressSummaryScreen` has a JSON export button for debugging.
+
+**Any new `Profile` field must also be handled in `migrateProfile()` in `src/store/profileStore.ts`** — it upgrades existing IndexedDB profiles in place on `initProfiles` (spread-defaults for new fields, merges achievements/skillNodes by id). Never bump the DB version.
+
+### Missions, achievements, and reward hooks
+
+- **Daily missions** — `refreshMissionsIfNeeded` (ProgressEngine) runs in `initProfiles` and on a Home-screen day-rollover effect. All mission templates mean "N correct answers in pillar X". Progress increments inside `profileStore.recordAnswer`; completing a mission pays +2 stars.
+- **Achievements** — `checkAchievements(profile)` (RewardEngine) covers all 4 condition types (stars, streak, games, mastered nodes). It is called from `recordAnswer`, `addStars`, and `recordGameCompleted` (invoked by `GameplayScreen` after `saveSession`). New unlocks land in transient `recentAchievements`, shown on the Reward screen.
+- **Bonus stars** — `calculateBonusStars` is applied in `GameplayScreen`'s completion handler for perfect rounds.
+- **Spaced repetition** — `suggestSkillNode` (DifficultyEngine) drives Home's "Today's Hero Training" card and GameSelection's "⭐ Recommended" badge.
+
+### UX conventions
+
+- **Buttons** — use the shared `Button` (`src/components/Button/index.tsx`): variants `primary`/`ghost`/`icon`, auto click-sound + haptic, ≥44px targets. Don't hand-roll `motion.button` for UI chrome.
+- **Haptics** — `src/utils/haptics.ts`; wired centrally through `useAudio` (`playCorrect`/`playWrong`/`playCelebration`/`playClick`), gated by `parentSettings.hapticsEnabled`. Games get haptics for free by using `useAudio` — never call `navigator.vibrate` directly.
+- **Fonts are bundled** — `@fontsource/fredoka-one` and `@fontsource/nunito` are imported in `main.tsx`. Never add a Google Fonts CDN import (offline-first violation). Use the `font-hero` class for playful headings.
+- **Idle nudge** — `src/hooks/useIdleNudge.ts` wiggles options after ~6s of inactivity; wire it in tap-to-answer games.
 
 ### PWA
 
@@ -92,16 +112,11 @@ ProgressEngine              RewardEngine (milestone check)
 
 ---
 
-## Remaining work (Tier 2 games)
+## Remaining work
 
-Files to create — wire each into `src/games/index.tsx`:
+All 16 games are live and the engine systems (missions, achievements, spaced repetition, haptics) are wired. What's left:
 
-- `src/games/numbers/TapAndCount.tsx`
-- `src/games/numbers/NumberHunt.tsx`
-- `src/games/alphabets/AlphabetSequence.tsx`
-- `src/games/memory/RememberTheOrder.tsx`
-- `src/games/memory/CharacterDisappears.tsx`
-- `src/games/logic/PatternBuilder.tsx`
-- `src/games/logic/CompareAndChoose.tsx`
-
-Daily missions auto-generation (`refreshMissionsIfNeeded`) and spaced repetition integration (`suggestSkillNode` from `DifficultyEngine`) are also pending — see `PROGRESS.md` for details.
+- **Assets** — Naruto and One Piece character webps are missing entirely (those universes show gradient placeholders); all audio files are optional and absent. See `PROGRESS.md` for exact file lists.
+- **Real per-universe progress** — `UniverseSelection` uses a total-star proxy.
+- **Capacitor Android APK** — steps in `PROGRESS.md`, blocked on real assets.
+- **Optional** — migrate games onto `QuestionGenerator` templates (games currently build their own rounds).
